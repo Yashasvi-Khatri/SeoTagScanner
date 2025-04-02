@@ -18,7 +18,12 @@ export default function Home() {
               </div>
               <div>
                 <h1 className="text-2xl font-bold">SEO Tag Analyzer</h1>
-                <p className="text-sm text-white/80">Analyze and improve your website's SEO meta tags</p>
+                <p className="text-sm text-white/80">
+                  Analyze and improve your website's SEO meta tags
+                  <span className="ml-2 bg-white/20 px-2 py-0.5 rounded text-xs font-bold">
+                    KHATRI ENTERPRISES™
+                  </span>
+                </p>
               </div>
             </div>
             <div className="hidden md:flex space-x-1">
@@ -50,7 +55,7 @@ export default function Home() {
         />
       </main>
       
-      <footer className="bg-gradient-to-r from-gray-800 to-gray-900 text-white py-6 mt-16">
+      <footer className="bg-gradient-to-r from-gray-800 to-gray-900 text-white py-8 mt-16">
         <div className="container mx-auto px-4">
           <div className="flex flex-col md:flex-row justify-between items-center">
             <div className="text-center md:text-left mb-4 md:mb-0">
@@ -73,8 +78,15 @@ export default function Home() {
               </a>
             </div>
           </div>
-          <div className="mt-6 text-center text-xs text-gray-500">
-            &copy; {new Date().getFullYear()} SEO Tag Analyzer. All rights reserved.
+          <div className="mt-6 flex flex-col md:flex-row justify-between items-center">
+            <div className="text-xs text-gray-500 mb-2 md:mb-0">
+              &copy; {new Date().getFullYear()} SEO Tag Analyzer. All rights reserved.
+            </div>
+            <div className="text-xs">
+              <span className="text-purple-400 font-semibold">
+                Powered by KHATRI ENTERPRISES™
+              </span>
+            </div>
           </div>
         </div>
       </footer>
