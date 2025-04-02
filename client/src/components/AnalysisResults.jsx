@@ -6,6 +6,7 @@ import TechnicalSEOTags from "@/components/TechnicalSEOTags";
 import GooglePreview from "@/components/GooglePreview";
 import SocialMediaPreviews from "@/components/SocialMediaPreviews";
 import RecommendationsCard from "@/components/RecommendationsCard";
+import CategorySummary from "@/components/CategorySummary";
 import { analyzeSeoScore, getRecommendations } from "@/lib/seoAnalyzer";
 
 const AnalysisResults = ({ analysisData, isLoading, error }) => {
@@ -14,6 +15,11 @@ const AnalysisResults = ({ analysisData, isLoading, error }) => {
   const [warningCount, setWarningCount] = useState(0);
   const [errorCount, setErrorCount] = useState(0);
   const [recommendations, setRecommendations] = useState([]);
+  const [categoriesScores, setCategoriesScores] = useState({
+    essential: { score: 0, status: 'error', statusText: 'Missing essential tags' },
+    social: { status: 'error', statusText: 'No social tags detected' },
+    technical: { status: 'error', statusText: 'Missing technical tags' }
+  });
   
   useEffect(() => {
     if (analysisData) {
@@ -23,8 +29,81 @@ const AnalysisResults = ({ analysisData, isLoading, error }) => {
       setWarningCount(warnings);
       setErrorCount(errors);
       setRecommendations(getRecommendations(analysisData));
+      
+      // Calculate scores and status for each category
+      calculateCategoryScores(analysisData);
     }
   }, [analysisData]);
+
+  const calculateCategoryScores = (data) => {
+    // Calculate Essential Meta Tags score
+    let essentialScore = 0;
+    let essentialStatus = 'error';
+    let essentialStatusText = 'Missing essential tags';
+    
+    const essentialTags = ['title', 'description', 'canonical', 'viewport'];
+    const presentEssentialTags = [
+      data.title ? 1 : 0,
+      data.metaTags.description ? 1 : 0,
+      data.metaTags.canonical ? 1 : 0,
+      data.metaTags.viewport ? 1 : 0
+    ];
+    
+    const essentialTagsPresent = presentEssentialTags.reduce((a, b) => a + b, 0);
+    essentialScore = Math.round((essentialTagsPresent / essentialTags.length) * 100);
+    
+    if (essentialScore >= 80) {
+      essentialStatus = 'optimal';
+      essentialStatusText = 'Well optimized';
+    } else if (essentialScore >= 50) {
+      essentialStatus = 'warning';
+      essentialStatusText = 'Needs improvement';
+    }
+    
+    // Calculate Social Media Tags status
+    const ogTags = data.socialTags.openGraph.length;
+    const twitterTags = data.socialTags.twitter.length;
+    let socialStatus = 'error';
+    let socialStatusText = 'No social tags detected';
+    
+    if (ogTags > 0 && twitterTags > 0) {
+      socialStatus = 'optimal';
+      socialStatusText = 'Complete';
+    } else if (ogTags > 0 || twitterTags > 0) {
+      socialStatus = 'warning';
+      socialStatusText = 'Partial implementation';
+    }
+    
+    // Calculate Technical SEO Tags status
+    let technicalStatus = 'error';
+    let technicalStatusText = 'Missing technical tags';
+    
+    if (data.metaTags.robots && data.linkTags.hreflang && data.linkTags.hreflang.length > 0) {
+      technicalStatus = 'optimal';
+      technicalStatusText = 'Well implemented';
+    } else if (data.metaTags.robots || (data.linkTags.hreflang && data.linkTags.hreflang.length > 0)) {
+      technicalStatus = 'warning';
+      technicalStatusText = 'Partial implementation';
+    }
+    
+    setCategoriesScores({
+      essential: { 
+        score: essentialScore, 
+        status: essentialStatus, 
+        statusText: essentialStatusText 
+      },
+      social: { 
+        status: socialStatus, 
+        statusText: socialStatusText,
+        count: ogTags + twitterTags
+      },
+      technical: { 
+        status: technicalStatus, 
+        statusText: technicalStatusText,
+        count: (data.metaTags.robots ? 1 : 0) + (data.linkTags.hreflang ? data.linkTags.hreflang.length : 0)
+      }
+    });
+  };
 
   if (isLoading) {
     return (
@@ -73,6 +152,36 @@ const AnalysisResults = ({ analysisData, isLoading, error }) => {
                        'Partial' : 'Missing')
         }
       />
+      
+      {/* Category Summaries */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+        <CategorySummary
+          title="Essential Meta Tags"
+          icon="fa-solid fa-tag"
+          score={categoriesScores.essential.score}
+          status={categoriesScores.essential.status}
+          statusText={categoriesScores.essential.statusText}
+          tooltip="These are the fundamental meta tags that every website should have. They include the title, description, canonical, and viewport tags."
+        />
+        
+        <CategorySummary
+          title="Social Media Tags"
+          icon="fa-solid fa-share-nodes"
+          status={categoriesScores.social.status}
+          statusText={categoriesScores.social.statusText}
+          count={categoriesScores.social.count}
+          tooltip="These tags determine how your content appears when shared on social media platforms like Facebook, Twitter, and LinkedIn."
+        />
+        
+        <CategorySummary
+          title="Technical SEO Tags"
+          icon="fa-solid fa-gears"
+          status={categoriesScores.technical.status}
+          statusText={categoriesScores.technical.statusText}
+          count={categoriesScores.technical.count}
+          tooltip="These tags provide additional technical information to search engines, such as indexing directives and language variants."
+        />
+      </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <div className="lg:col-span-2 space-y-6">
