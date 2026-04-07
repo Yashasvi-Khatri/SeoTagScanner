@@ -60,7 +60,7 @@ export default function Home() {
                     <div className="h-6 w-6 bg-white/20 rounded-full flex items-center justify-center">
                       <i className="fa-solid fa-user text-xs"></i>
                     </div>
-                    <span className="text-sm font-medium">{user.username}</span>
+                    <span className="text-sm font-medium">{user.email}</span>
                   </div>
                   <button
                     onClick={logout}

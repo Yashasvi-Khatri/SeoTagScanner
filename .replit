@@ -41,3 +41,9 @@ agentRequireRestartOnSave = false
 task = "shell.exec"
 args = "npm run dev"
 waitForPort = 5000
+
+[userenv]
+
+[userenv.shared]
+SUPABASE_URL = "https://dzdapevcmsbbkmcnrwlb.supabase.co"
+SUPABASE_ANON_KEY = "sb_publishable_O56fkimTFtV5j01rlPGnew_bMlzfXw0"

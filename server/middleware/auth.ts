@@ -2,7 +2,7 @@ import { Request, Response, NextFunction } from "express";
 import jwt from "jsonwebtoken";
 
 export interface AuthRequest extends Request {
-  userId?: number;
+  userId?: string;
   userEmail?: string;
 }
 
@@ -19,7 +19,7 @@ export function requireAuth(req: AuthRequest, res: Response, next: NextFunction)
     const secret = process.env.JWT_SECRET;
     if (!secret) throw new Error("JWT_SECRET not configured");
 
-    const decoded = jwt.verify(token, secret) as { userId: number; email: string };
+    const decoded = jwt.verify(token, secret) as { userId: string; email: string };
     req.userId = decoded.userId;
     req.userEmail = decoded.email;
     next();

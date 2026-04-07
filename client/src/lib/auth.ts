@@ -2,8 +2,7 @@ const TOKEN_KEY = "seo_auth_token";
 const USER_KEY = "seo_auth_user";
 
 export interface AuthUser {
-  id: number;
-  username: string;
+  id: string;
   email: string;
 }
 

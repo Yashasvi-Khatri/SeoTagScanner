@@ -1,10 +1,11 @@
 import { Response } from "express";
 import axios from "axios";
 import * as cheerio from "cheerio";
-import { db } from "../db";
-import { seoResults, dailyScanCounts } from "@shared/schema";
-import { eq, and } from "drizzle-orm";
 import { AuthRequest } from "../middleware/auth";
+
+// Model imports — all DB logic lives here, controllers never touch Supabase directly
+// @ts-ignore — JS model files
+import { saveScan, getUserScans, countTodayScans } from "../models/scanModel.js";
 
 const DAILY_SCAN_LIMIT = 20;
 
@@ -17,22 +18,15 @@ export async function scanUrl(req: AuthRequest, res: Response) {
       return res.status(400).json({ message: "URL query parameter is required" });
     }
 
-    let parsedUrl: URL;
     try {
-      parsedUrl = new URL(url);
+      new URL(url);
     } catch {
       return res.status(400).json({ message: "Invalid URL format" });
     }
 
-    // Check daily rate limit
-    const today = new Date().toISOString().split("T")[0];
-    const [existing] = await db
-      .select()
-      .from(dailyScanCounts)
-      .where(and(eq(dailyScanCounts.user_id, userId), eq(dailyScanCounts.scan_date, today)))
-      .limit(1);
-
-    if (existing && existing.count >= DAILY_SCAN_LIMIT) {
+    // Enforce daily rate limit via scan history in DB
+    const todayCount = await countTodayScans(userId);
+    if (todayCount >= DAILY_SCAN_LIMIT) {
       return res.status(429).json({
         message: `Daily scan limit of ${DAILY_SCAN_LIMIT} reached. Try again tomorrow.`,
       });
@@ -60,9 +54,7 @@ export async function scanUrl(req: AuthRequest, res: Response) {
     const metaTags: Record<string, string>[] = [];
     $("meta").each((_i, el) => {
       const attrs: Record<string, string> = {};
-      Object.keys(el.attribs).forEach((attr) => {
-        attrs[attr] = el.attribs[attr];
-      });
+      Object.keys(el.attribs).forEach((attr) => { attrs[attr] = el.attribs[attr]; });
       metaTags.push(attrs);
     });
 
@@ -70,9 +62,7 @@ export async function scanUrl(req: AuthRequest, res: Response) {
     const linkTags: Record<string, string>[] = [];
     $("link").each((_i, el) => {
       const attrs: Record<string, string> = {};
-      Object.keys(el.attribs).forEach((attr) => {
-        attrs[attr] = el.attribs[attr];
-      });
+      Object.keys(el.attribs).forEach((attr) => { attrs[attr] = el.attribs[attr]; });
       linkTags.push(attrs);
     });
 
@@ -93,14 +83,12 @@ export async function scanUrl(req: AuthRequest, res: Response) {
       Object.keys(t).some((attr) => attr === "name" && t[attr].startsWith("twitter:"))
     );
 
-    const ogTitle = ogTags.find((t) => t.property === "og:title")?.content || null;
-    const ogDescription = ogTags.find((t) => t.property === "og:description")?.content || null;
-    const ogImage = ogTags.find((t) => t.property === "og:image")?.content || null;
+    const ogTitle = ogTags.find((t) => t.property === "og:title")?.content ?? null;
+    const ogDescription = ogTags.find((t) => t.property === "og:description")?.content ?? null;
+    const ogImage = ogTags.find((t) => t.property === "og:image")?.content ?? null;
 
-    // H1 count
+    // H1 count and image alt coverage
     const h1Count = $("h1").length;
-
-    // Image alt tag coverage
     const allImages = $("img");
     const totalImages = allImages.length;
     const imagesWithAlt = allImages.filter((_i, el) => !!$(el).attr("alt")).length;
@@ -125,31 +113,8 @@ export async function scanUrl(req: AuthRequest, res: Response) {
       allLinkTags: linkTags,
     };
 
-    // Save to DB
-    const timestamp = new Date().toISOString();
-    await db.insert(seoResults).values({
-      user_id: userId,
-      url,
-      title,
-      description: description?.content ?? null,
-      score: 0,
-      analysis_data: JSON.stringify(analysisData),
-      created_at: timestamp,
-    });
-
-    // Update daily scan count
-    if (existing) {
-      await db
-        .update(dailyScanCounts)
-        .set({ count: existing.count + 1 })
-        .where(eq(dailyScanCounts.id, existing.id));
-    } else {
-      await db.insert(dailyScanCounts).values({
-        user_id: userId,
-        scan_date: today,
-        count: 1,
-      });
-    }
+    // Persist via model — controller never calls Supabase directly
+    await saveScan(userId, url, analysisData);
 
     return res.status(200).json(analysisData);
   } catch (err: any) {
@@ -161,18 +126,16 @@ export async function scanUrl(req: AuthRequest, res: Response) {
 export async function getScanHistory(req: AuthRequest, res: Response) {
   try {
     const userId = req.userId!;
-    const rows = await db
-      .select()
-      .from(seoResults)
-      .where(eq(seoResults.user_id, userId))
-      .orderBy(seoResults.id);
 
-    const history = rows.reverse().slice(0, 20).map((r) => ({
-      id: r.id,
-      url: r.url,
-      title: r.title,
-      description: r.description,
-      created_at: r.created_at,
+    // Fetch via model — controller never calls Supabase directly
+    const scans = await getUserScans(userId);
+
+    const history = scans.map((s: any) => ({
+      id: s.id,
+      url: s.url,
+      title: s.result?.title ?? null,
+      description: s.result?.metaTags?.description?.content ?? null,
+      created_at: s.scanned_at,
     }));
 
     return res.status(200).json(history);
