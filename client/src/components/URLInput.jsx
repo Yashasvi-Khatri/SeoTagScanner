@@ -1,6 +1,6 @@
 import { useState } from "react";
-import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
+import { getToken } from "@/lib/auth";
 
 const URLInput = ({ setAnalysisData, setIsLoading, setError }) => {
   const [url, setUrl] = useState("");
@@ -8,43 +8,47 @@ const URLInput = ({ setAnalysisData, setIsLoading, setError }) => {
 
   const handleUrlSubmit = async (event) => {
     event.preventDefault();
-    
+
     if (!url) {
       toast({
         title: "URL is required",
         description: "Please enter a website URL to analyze",
-        variant: "destructive"
+        variant: "destructive",
       });
       return;
     }
-    
-    // Basic URL validation
+
     let formattedUrl = url;
-    
     try {
-      // Add protocol if missing
       if (!/^https?:\/\//i.test(url)) {
         formattedUrl = `https://${url}`;
       }
-      
-      // Check if valid URL
       new URL(formattedUrl);
     } catch (e) {
       toast({
         title: "Invalid URL",
         description: "Please enter a valid website URL",
-        variant: "destructive"
+        variant: "destructive",
       });
       return;
     }
-    
+
     setIsLoading(true);
     setError(null);
     setAnalysisData(null);
-    
+
     try {
-      const res = await apiRequest("POST", "/api/analyze", { url: formattedUrl });
+      const token = getToken();
+      const res = await fetch(`/api/scan?url=${encodeURIComponent(formattedUrl)}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+
       const data = await res.json();
+
+      if (!res.ok) {
+        throw new Error(data.message || "Failed to analyze URL");
+      }
+
       setAnalysisData(data);
     } catch (error) {
       console.error("Error analyzing URL:", error);
@@ -52,30 +56,17 @@ const URLInput = ({ setAnalysisData, setIsLoading, setError }) => {
       toast({
         title: "Analysis Failed",
         description: error.message || "Failed to analyze URL. Please try again.",
-        variant: "destructive"
+        variant: "destructive",
       });
     } finally {
       setIsLoading(false);
     }
   };
-  
-  const clearInput = () => {
-    setUrl("");
-  };
 
-  // List of popular websites for examples
-  const popularWebsites = [
-    "google.com",
-    "amazon.com",
-    "twitter.com",
-    "github.com",
-    "wikipedia.org"
-  ];
+  const clearInput = () => setUrl("");
 
-  // Get a random website from the list
-  const getRandomWebsite = () => {
-    return popularWebsites[Math.floor(Math.random() * popularWebsites.length)];
-  };
+  const popularWebsites = ["google.com", "amazon.com", "twitter.com", "github.com", "wikipedia.org"];
+  const getRandomWebsite = () => popularWebsites[Math.floor(Math.random() * popularWebsites.length)];
 
   return (
     <section className="mb-10">
@@ -87,22 +78,20 @@ const URLInput = ({ setAnalysisData, setIsLoading, setError }) => {
             <path d="M2 12h20"></path>
           </svg>
         </div>
-        
-        <h2 className="text-2xl font-bold mb-2 text-gray-800">
-          Analyze Website SEO Tags
-        </h2>
+
+        <h2 className="text-2xl font-bold mb-2 text-gray-800">Analyze Website SEO Tags</h2>
         <p className="text-indigo-700 mb-6">
           Enter any website URL to get an in-depth analysis of its SEO implementation
         </p>
-        
+
         <form className="flex flex-col md:flex-row gap-4" onSubmit={handleUrlSubmit}>
           <div className="flex-grow relative">
             <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
               <i className="fa-solid fa-globe text-indigo-500"></i>
             </div>
-            <input 
-              type="url" 
-              id="website-url" 
+            <input
+              type="url"
+              id="website-url"
               placeholder={`https://${getRandomWebsite()}`}
               value={url}
               onChange={(e) => setUrl(e.target.value)}
@@ -111,9 +100,9 @@ const URLInput = ({ setAnalysisData, setIsLoading, setError }) => {
             />
             {url ? (
               <div className="absolute inset-y-0 right-0 pr-3 flex items-center">
-                <button 
-                  type="button" 
-                  className="text-gray-400 hover:text-gray-600 bg-gray-100 hover:bg-gray-200 rounded-full p-1 transition-colors" 
+                <button
+                  type="button"
+                  className="text-gray-400 hover:text-gray-600 bg-gray-100 hover:bg-gray-200 rounded-full p-1 transition-colors"
                   title="Clear input"
                   onClick={clearInput}
                 >
@@ -126,18 +115,18 @@ const URLInput = ({ setAnalysisData, setIsLoading, setError }) => {
               </div>
             )}
           </div>
-          <button 
-            type="submit" 
+          <button
+            type="submit"
             className="bg-gradient-to-r from-primary to-indigo-600 hover:from-primary/90 hover:to-indigo-600/90 text-white px-6 py-4 rounded-lg font-semibold transition-all shadow-md hover:shadow-lg flex items-center justify-center whitespace-nowrap"
           >
             <span>Analyze Now</span>
             <i className="fa-solid fa-search-plus ml-2"></i>
           </button>
         </form>
-        
+
         <div className="mt-6 flex flex-wrap gap-3">
           <div className="text-sm font-medium">Popular examples:</div>
-          {popularWebsites.map(site => (
+          {popularWebsites.map((site) => (
             <button
               key={site}
               type="button"
@@ -148,7 +137,7 @@ const URLInput = ({ setAnalysisData, setIsLoading, setError }) => {
             </button>
           ))}
         </div>
-        
+
         <div className="mt-6 flex flex-col sm:flex-row sm:items-center gap-4 bg-indigo-100/50 p-4 rounded-lg">
           <div className="flex items-center gap-3">
             <div className="h-10 w-10 flex items-center justify-center bg-indigo-100 rounded-full">
