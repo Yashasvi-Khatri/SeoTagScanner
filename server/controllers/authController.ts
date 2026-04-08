@@ -3,14 +3,6 @@ import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import { AuthRequest } from "../middleware/auth";
 
-// Type definition for user object from Supabase
-interface User {
-  id: string;
-  email: string;
-  password_hash: string;
-  created_at: string;
-}
-
 // Model imports — all DB logic lives here, controllers never touch Supabase directly
 // @ts-ignore — JS model files
 import { createUser, findUserByEmail, findUserById } from "../models/userModel.js";
@@ -41,11 +33,11 @@ export async function register(req: Request, res: Response) {
     const passwordHash = await bcrypt.hash(password, 12);
     const user = await createUser(email, passwordHash);
 
-    const token = signToken((user as any).id, (user as any).email);
+    const token = signToken(user.id, user.email);
 
     return res.status(201).json({
       token,
-      user: { id: (user as any).id, email: (user as any).email },
+      user: { id: user.id, email: user.email },
     });
   } catch (err: any) {
     console.error("Register error:", err);
@@ -66,16 +58,16 @@ export async function login(req: Request, res: Response) {
       return res.status(401).json({ message: "Invalid email or password" });
     }
 
-    const valid = await bcrypt.compare(password, (user as any).password_hash);
+    const valid = await bcrypt.compare(password, user.password_hash);
     if (!valid) {
       return res.status(401).json({ message: "Invalid email or password" });
     }
 
-    const token = signToken((user as any).id, (user as any).email);
+    const token = signToken(user.id, user.email);
 
     return res.status(200).json({
       token,
-      user: { id: (user as any).id, email: (user as any).email },
+      user: { id: user.id, email: user.email },
     });
   } catch (err: any) {
     console.error("Login error:", err);
@@ -90,7 +82,7 @@ export async function me(req: AuthRequest, res: Response) {
     const user = await findUserById(req.userId);
     if (!user) return res.status(404).json({ message: "User not found" });
 
-    return res.status(200).json({ user: { id: (user as any).id, email: (user as any).email } });
+    return res.status(200).json({ user: { id: user.id, email: user.email } });
   } catch (err: any) {
     return res.status(500).json({ message: "Failed to fetch user" });
   }
