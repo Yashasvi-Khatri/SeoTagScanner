@@ -1,12 +1,12 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 import * as bcrypt from 'bcryptjs';
-import { sign, verify } from 'jsonwebtoken';
+import jwt from 'jsonwebtoken';
 import { createUser, findUserByEmail } from '../../lib/userModel.js';
 
 function signToken(userId: string, email: string): string {
   const secret = process.env.JWT_SECRET;
   if (!secret) throw new Error("JWT_SECRET not configured");
-  return sign({ userId, email }, secret, { expiresIn: "7d" });
+  return jwt.sign({ userId, email }, secret, { expiresIn: "7d" });
 }
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {

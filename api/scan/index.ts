@@ -1,5 +1,5 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
-import { verify } from 'jsonwebtoken';
+import jwt from 'jsonwebtoken';
 import { saveScan } from '../../lib/scanModel.js';
 import axios from 'axios';
 import * as cheerio from 'cheerio';
@@ -43,7 +43,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     }
 
     console.log('Step 2: Verifying JWT token')
-    const decoded = verify(token, secret) as { userId: string; email: string };
+    const decoded = jwt.verify(token, secret) as { userId: string; email: string };
     console.log('Token verified for user:', decoded.userId)
     
     const { url } = req.query;
