@@ -5,9 +5,13 @@ import TagDisplay from "./TagDisplay";
 export default function MetaTagsList({ essentialTags, socialTags }) {
   const [socialFilter, setSocialFilter] = useState("all");
   
+  // Defensive programming - ensure arrays exist
+  const safeEssentialTags = Array.isArray(essentialTags) ? essentialTags : [];
+  const safeSocialTags = Array.isArray(socialTags) ? socialTags : [];
+  
   const filteredSocialTags = socialFilter === "all" 
-    ? socialTags 
-    : socialTags.filter(tag => tag.type === socialFilter.toLowerCase());
+    ? safeSocialTags 
+    : safeSocialTags.filter(tag => tag.type === socialFilter.toLowerCase());
   
   return (
     <div className="mb-8">
@@ -23,7 +27,7 @@ export default function MetaTagsList({ essentialTags, socialTags }) {
       </div>
       
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
-        {essentialTags.map((tag, index) => (
+        {safeEssentialTags.map((tag, index) => (
           <TagDisplay key={index} tag={tag} />
         ))}
       </div>

@@ -75,13 +75,17 @@ const TagItem = ({ name, content, status }) => {
 const SocialMediaTags = ({ openGraphTags, twitterTags }) => {
   const [activeTab, setActiveTab] = useState('openGraph');
   
+  // Defensive programming - ensure arrays exist
+  const safeOpenGraphTags = Array.isArray(openGraphTags) ? openGraphTags : [];
+  const safeTwitterTags = Array.isArray(twitterTags) ? twitterTags : [];
+  
   // Process Open Graph tags
-  const ogTagItems = openGraphTags.map(tag => {
+  const ogTagItems = safeOpenGraphTags.map(tag => {
     const name = tag.property;
     const content = `<meta property="${tag.property}" content="${tag.content}">`;
     let status = 'Optimal';
     
-    if (tag.property === 'og:description' && tag.content.length < 60) {
+    if (tag.property === 'og:description' && tag.content && tag.content.length < 60) {
       status = 'Needs Improvement';
     }
     
@@ -89,12 +93,12 @@ const SocialMediaTags = ({ openGraphTags, twitterTags }) => {
   });
   
   // Process Twitter tags
-  const twitterTagItems = twitterTags.map(tag => {
+  const twitterTagItems = safeTwitterTags.map(tag => {
     const name = tag.name;
     const content = `<meta name="${tag.name}" content="${tag.content}">`;
     let status = 'Optimal';
     
-    if (tag.name === 'twitter:description' && tag.content.length < 60) {
+    if (tag.name === 'twitter:description' && tag.content && tag.content.length < 60) {
       status = 'Needs Improvement';
     }
     
