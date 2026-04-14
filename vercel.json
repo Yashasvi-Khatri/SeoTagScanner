@@ -1,13 +1,14 @@
 {
   "version": 2,
-  "buildCommand": "cd client && npm install && npm run build",
+  "buildCommand": "npm install && cd client && npm run build",
   "outputDirectory": "client/dist",
   "rewrites": [
-    { "source": "/api/auth/register", "destination": "/api/auth/register" },
-    { "source": "/api/auth/login", "destination": "/api/auth/login" },
-    { "source": "/api/auth/me", "destination": "/api/auth/me" },
-    { "source": "/api/scan/history", "destination": "/api/scan/history" },
-    { "source": "/api/scan", "destination": "/api/scan/index" },
+    { "source": "/api/health", "destination": "/api/health.ts" },
+    { "source": "/api/auth/register", "destination": "/api/auth/register.ts" },
+    { "source": "/api/auth/login", "destination": "/api/auth/login.ts" },
+    { "source": "/api/auth/me", "destination": "/api/auth/me.ts" },
+    { "source": "/api/scan/history", "destination": "/api/scan/history.ts" },
+    { "source": "/api/scan", "destination": "/api/scan/index.ts" },
     { "source": "/(.*)", "destination": "/index.html" }
   ]
 }
