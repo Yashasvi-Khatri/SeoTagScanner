@@ -3,14 +3,7 @@
   "buildCommand": "cd client && npm run build",
   "outputDirectory": "client/dist",
   "rewrites": [
-    { "source": "/api/minimal", "destination": "/api/minimal.ts" },
-    { "source": "/api/test", "destination": "/api/test.ts" },
-    { "source": "/api/health", "destination": "/api/health.ts" },
-    { "source": "/api/auth/register", "destination": "/api/auth/register.ts" },
-    { "source": "/api/auth/login", "destination": "/api/auth/login.ts" },
-    { "source": "/api/auth/me", "destination": "/api/auth/me.ts" },
-    { "source": "/api/scan/history", "destination": "/api/scan/history.ts" },
-    { "source": "/api/scan", "destination": "/api/scan/index.ts" },
+    { "source": "/api/(.*)", "destination": "/api/$1" },
     { "source": "/(.*)", "destination": "/index.html" }
   ]
 }
