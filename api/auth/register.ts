@@ -1,6 +1,6 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 import * as bcrypt from 'bcryptjs';
-import * as jwt from 'jsonwebtoken';
+import jwt from 'jsonwebtoken';
 import { createUser, findUserByEmail } from '../../lib/userModel.js';
 
 function signToken(userId: string, email: string): string {

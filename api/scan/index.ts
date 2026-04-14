@@ -1,5 +1,5 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
-import * as jwt from 'jsonwebtoken';
+import jwt from 'jsonwebtoken';
 import { saveScan } from '../../lib/scanModel.js';
 import axios from 'axios';
 import * as cheerio from 'cheerio';
