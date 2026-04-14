@@ -2,6 +2,7 @@ import type { VercelRequest, VercelResponse } from '@vercel/node';
 import * as jwt from 'jsonwebtoken';
 import { saveScan } from '../../lib/scanModel.js';
 import axios from 'axios';
+import * as cheerio from 'cheerio';
 
 process.on('unhandledRejection', (reason) => {
   console.error('UNHANDLED REJECTION:', reason)
@@ -71,7 +72,12 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     console.log('Scan saved successfully, ID:', scan.id)
 
     console.log('=== SCAN API SUCCESS ===')
-    return res.status(200).json({ scan, analysis: result });
+    return res.status(200).json({
+      scan,
+      analysis: result,
+      // also spread at top level for frontend compatibility
+      ...result
+    });
   } catch (error: any) {
     console.error('=== SCAN API ERROR ===')
     console.error('Error type:', error.constructor.name)
@@ -101,7 +107,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 }
 
 async function analyzeSEO(url: string) {
-  console.log('Starting SEO analysis for:', url)
+  console.log('Starting comprehensive SEO analysis for:', url)
   
   try {
     console.log('Fetching HTML content...')
@@ -117,36 +123,92 @@ async function analyzeSEO(url: string) {
     
     console.log('HTML fetched, length:', html.length)
     
-    // Basic SEO analysis (you can expand this)
-    const titleMatch = html.match(/<title[^>]*>([^<]+)<\/title>/i);
-    const title = titleMatch ? titleMatch[1].trim() : null;
-    console.log('Title found:', title ? 'YES' : 'NO')
-    
-    const descMatch = html.match(/<meta[^>]*name=["']description["'][^>]*content=["']([^"']+)["'][^>]*>/i);
-    const description = descMatch ? descMatch[1].trim() : null;
-    console.log('Description found:', description ? 'YES' : 'NO')
-    
-    const ogTitleMatch = html.match(/<meta[^>]*property=["']og:title["'][^>]*content=["']([^"']+)["'][^>]*>/i);
-    const ogTitle = ogTitleMatch ? ogTitleMatch[1].trim() : null;
-    console.log('OG Title found:', ogTitle ? 'YES' : 'NO')
-    
-    const ogDescMatch = html.match(/<meta[^>]*property=["']og:description["'][^>]*content=["']([^"']+)["'][^>]*>/i);
-    const ogDescription = ogDescMatch ? ogDescMatch[1].trim() : null;
-    console.log('OG Description found:', ogDescription ? 'YES' : 'NO')
-    
-    const h1Count = (html.match(/<h1[^>]*>/gi) || []).length;
-    console.log('H1 count:', h1Count)
-    
+    const $ = cheerio.load(html);
+
+    // Essential tags
+    const title = $('title').first().text().trim() || null;
+    const description = $('meta[name="description"]').attr('content') || null;
+    const canonical = $('link[rel="canonical"]').attr('href') || null;
+    const viewport = $('meta[name="viewport"]').attr('content') || null;
+    const robots = $('meta[name="robots"]').attr('content') || null;
+
+    // Open Graph tags
+    const ogTitle = $('meta[property="og:title"]').attr('content') || null;
+    const ogDescription = $('meta[property="og:description"]').attr('content') || null;
+    const ogImage = $('meta[property="og:image"]').attr('content') || null;
+    const ogUrl = $('meta[property="og:url"]').attr('content') || null;
+    const ogType = $('meta[property="og:type"]').attr('content') || null;
+
+    // Twitter tags
+    const twitterCard = $('meta[name="twitter:card"]').attr('content') || null;
+    const twitterTitle = $('meta[name="twitter:title"]').attr('content') || null;
+    const twitterDescription = $('meta[name="twitter:description"]').attr('content') || null;
+    const twitterImage = $('meta[name="twitter:image"]').attr('content') || null;
+
+    // Technical
+    const h1Tags = $('h1').map((_index: number, el: any) => $(el).text().trim()).get();
+    const h1Count = h1Tags.length;
+    const imagesWithoutAlt = $('img:not([alt])').length;
+    const lang = $('html').attr('lang') || null;
+
+    // Build allMetaTags array (what frontend renders in tag list)
+    const allMetaTags: any[] = [];
+    $('meta').each((_index: number, el: any) => {
+      const name = $(el).attr('name') || $(el).attr('property') || $(el).attr('http-equiv');
+      const content = $(el).attr('content');
+      if (name && content) {
+        allMetaTags.push({ name, content });
+      }
+    });
+
+    // Build structured response matching frontend expectations
     const result = {
       url,
       title,
       description,
+      h1Count,
+      h1Tags,
+      imagesWithoutAlt,
+      lang,
+      allMetaTags,
+      metaTags: {
+        description,
+        canonical,
+        viewport,
+        robots,
+      },
+      socialTags: {
+        openGraph: [
+          ogTitle && { property: 'og:title', content: ogTitle },
+          ogDescription && { property: 'og:description', content: ogDescription },
+          ogImage && { property: 'og:image', content: ogImage },
+          ogUrl && { property: 'og:url', content: ogUrl },
+          ogType && { property: 'og:type', content: ogType },
+        ].filter(Boolean),
+        twitter: [
+          twitterCard && { name: 'twitter:card', content: twitterCard },
+          twitterTitle && { name: 'twitter:title', content: twitterTitle },
+          twitterDescription && { name: 'twitter:description', content: twitterDescription },
+          twitterImage && { name: 'twitter:image', content: twitterImage },
+        ].filter(Boolean),
+      },
+      technicalTags: {
+        canonical,
+        viewport,
+        robots,
+        lang,
+        h1Count,
+        imagesWithoutAlt,
+      },
       ogTitle,
       ogDescription,
-      h1Count,
-      score: calculateSEOScore({ title, description, ogTitle, ogDescription, h1Count })
+      ogImage,
+      twitterCard,
+      twitterTitle,
+      score: 0, // calculated below
     };
-    
+
+    result.score = calculateSEOScore(result);
     console.log('SEO analysis completed, score:', result.score)
     return result;
   } catch (error: any) {
@@ -169,13 +231,17 @@ async function analyzeSEO(url: string) {
   }
 }
 
-function calculateSEOScore(data: any) {
+function calculateSEOScore(data: any): number {
   let score = 0;
-  if (data.title) score += 20;
-  if (data.description) score += 20;
-  if (data.ogTitle) score += 15;
-  if (data.ogDescription) score += 15;
-  if (data.h1Count === 1) score += 15;
-  if (data.h1Count > 0) score += 10;
+  if (data.title) score += 15;
+  if (data.description) score += 15;
+  if (data.metaTags?.canonical) score += 10;
+  if (data.metaTags?.viewport) score += 10;
+  if (data.ogTitle) score += 10;
+  if (data.ogDescription) score += 10;
+  if (data.ogImage) score += 5;
+  if (data.twitterCard) score += 10;
+  if (data.h1Count === 1) score += 10;
+  if (data.imagesWithoutAlt === 0) score += 5;
   return Math.min(score, 100);
 }

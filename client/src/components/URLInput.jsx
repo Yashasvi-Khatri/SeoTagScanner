@@ -42,16 +42,24 @@ const URLInput = ({ setAnalysisData, setIsLoading, setError }) => {
       console.log('RAW SCAN RESPONSE:', JSON.stringify(response.data, null, 2));
       
       // Defensive response handling with fallbacks
+      const data = response.data?.analysis || response.data;
       const safeData = {
-        score: response.data?.score ?? 0,
-        tags: response.data?.tags ?? [],
-        recommendations: response.data?.recommendations ?? [],
-        socialTags: response.data?.socialTags ?? {},
-        technicalTags: response.data?.technicalTags ?? {},
-        url: response.data?.url ?? formattedUrl,
-        title: response.data?.title ?? null,
-        description: response.data?.description ?? null,
-        ...response.data
+        score: data?.score ?? 0,
+        tags: data?.allMetaTags ?? [],
+        recommendations: data?.recommendations ?? [],
+        allMetaTags: data?.allMetaTags ?? [],
+        metaTags: data?.metaTags ?? {},
+        socialTags: data?.socialTags ?? { openGraph: [], twitter: [] },
+        technicalTags: data?.technicalTags ?? {},
+        url: data?.url ?? formattedUrl,
+        title: data?.title ?? null,
+        description: data?.description ?? null,
+        h1Count: data?.h1Count ?? 0,
+        ogTitle: data?.ogTitle ?? null,
+        ogDescription: data?.ogDescription ?? null,
+        ogImage: data?.ogImage ?? null,
+        twitterCard: data?.twitterCard ?? null,
+        ...data
       };
       
       setAnalysisData(safeData);
