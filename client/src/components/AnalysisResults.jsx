@@ -20,6 +20,15 @@ const AnalysisResults = ({ analysisData, isLoading, error }) => {
     social: { status: 'error', statusText: 'No social tags detected' },
     technical: { status: 'error', statusText: 'Missing technical tags' }
   });
+
+  // Loading/empty state guard
+  if (!analysisData || !analysisData.allMetaTags) {
+    return (
+      <div className="p-4 text-gray-500">
+        No scan results Yet. Enter a URL to scan.
+      </div>
+    );
+  }
   
   useEffect(() => {
     if (analysisData) {
@@ -44,9 +53,9 @@ const AnalysisResults = ({ analysisData, isLoading, error }) => {
     const essentialTags = ['title', 'description', 'canonical', 'viewport'];
     const presentEssentialTags = [
       data.title ? 1 : 0,
-      data.metaTags.description ? 1 : 0,
-      data.metaTags.canonical ? 1 : 0,
-      data.metaTags.viewport ? 1 : 0
+      data.metaTags?.description ? 1 : 0,
+      data.metaTags?.canonical ? 1 : 0,
+      data.metaTags?.viewport ? 1 : 0
     ];
     
     const essentialTagsPresent = presentEssentialTags.reduce((a, b) => a + b, 0);
@@ -61,8 +70,8 @@ const AnalysisResults = ({ analysisData, isLoading, error }) => {
     }
     
     // Calculate Social Media Tags status
-    const ogTags = data.socialTags.openGraph.length;
-    const twitterTags = data.socialTags.twitter.length;
+    const ogTags = data.socialTags?.openGraph?.length || 0;
+    const twitterTags = data.socialTags?.twitter?.length || 0;
     let socialStatus = 'error';
     let socialStatusText = 'No social tags detected';
     
@@ -78,10 +87,10 @@ const AnalysisResults = ({ analysisData, isLoading, error }) => {
     let technicalStatus = 'error';
     let technicalStatusText = 'Missing technical tags';
     
-    if (data.metaTags.robots && data.linkTags.hreflang && data.linkTags.hreflang.length > 0) {
+    if (data.metaTags?.robots && data.linkTags?.hreflang && data.linkTags?.hreflang?.length > 0) {
       technicalStatus = 'optimal';
       technicalStatusText = 'Well implemented';
-    } else if (data.metaTags.robots || (data.linkTags.hreflang && data.linkTags.hreflang.length > 0)) {
+    } else if (data.metaTags?.robots || (data.linkTags?.hreflang && data.linkTags?.hreflang?.length > 0)) {
       technicalStatus = 'warning';
       technicalStatusText = 'Partial implementation';
     }
@@ -143,12 +152,12 @@ const AnalysisResults = ({ analysisData, isLoading, error }) => {
         passedCount={passedCount}
         warningCount={warningCount}
         errorCount={errorCount}
-        metaTagsCount={analysisData.allMetaTags.length}
+        metaTagsCount={analysisData.allMetaTags?.length || 0}
         socialShareStatus={
-          analysisData.socialTags.openGraph.length > 0 && 
-          analysisData.socialTags.twitter.length > 0 ? 
-          'Complete' : (analysisData.socialTags.openGraph.length > 0 || 
-                       analysisData.socialTags.twitter.length > 0 ? 
+          (analysisData.socialTags?.openGraph?.length > 0 && 
+          analysisData.socialTags?.twitter?.length > 0) ? 
+          'Complete' : (analysisData.socialTags?.openGraph?.length > 0 || 
+                       analysisData.socialTags?.twitter?.length > 0 ? 
                        'Partial' : 'Missing')
         }
       />
@@ -187,19 +196,19 @@ const AnalysisResults = ({ analysisData, isLoading, error }) => {
         <div className="lg:col-span-2 space-y-6">
           <EssentialMetaTags 
             title={analysisData.title}
-            description={analysisData.metaTags.description}
-            canonical={analysisData.metaTags.canonical}
-            viewport={analysisData.metaTags.viewport}
+            description={analysisData.metaTags?.description?.content}
+            canonical={analysisData.metaTags?.canonical}
+            viewport={analysisData.metaTags?.viewport}
           />
           
           <SocialMediaTags 
-            openGraphTags={analysisData.socialTags.openGraph}
-            twitterTags={analysisData.socialTags.twitter}
+            openGraphTags={analysisData.socialTags?.openGraph || []}
+            twitterTags={analysisData.socialTags?.twitter || []}
           />
           
           <TechnicalSEOTags 
-            robots={analysisData.metaTags.robots}
-            hreflang={analysisData.linkTags.hreflang}
+            robots={analysisData.metaTags?.robots}
+            hreflang={analysisData.linkTags?.hreflang || []}
           />
         </div>
 
@@ -214,7 +223,7 @@ const AnalysisResults = ({ analysisData, isLoading, error }) => {
             url={analysisData.url}
             title={analysisData.title}
             description={analysisData.metaTags.description?.content}
-            image={analysisData.socialTags.openGraph.find(tag => tag.property === 'og:image')?.content}
+            image={analysisData.socialTags?.openGraph?.find(tag => tag.property === 'og:image')?.content || ''}
           />
           
           <RecommendationsCard recommendations={recommendations} />

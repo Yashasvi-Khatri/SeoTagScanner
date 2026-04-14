@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import URLInput from "@/components/URLInput";
 import AnalysisResults from "@/components/AnalysisResults";
+import ErrorBoundary from "@/components/ErrorBoundary";
 import { useAuth } from "@/context/AuthContext";
 import api from "@/lib/api";
 
@@ -77,11 +78,13 @@ export default function Home() {
           setError={setError}
         />
 
-        <AnalysisResults
-          analysisData={analysisData}
-          isLoading={isLoading}
-          error={error}
-        />
+        <ErrorBoundary>
+          <AnalysisResults
+            analysisData={analysisData}
+            isLoading={isLoading}
+            error={error}
+          />
+        </ErrorBoundary>
 
         {/* Scan History */}
         <section className="mt-10">

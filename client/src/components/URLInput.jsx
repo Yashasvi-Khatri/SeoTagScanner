@@ -38,12 +38,26 @@ const URLInput = ({ setAnalysisData, setIsLoading, setError }) => {
     setAnalysisData(null);
 
     try {
-      const res = await api.get(`/api/scan?url=${encodeURIComponent(formattedUrl)}`);
-      console.log('RAW SCAN RESPONSE:', JSON.stringify(res.data, null, 2));
-      setAnalysisData(res.data);
+      const response = await api.get(`/api/scan?url=${encodeURIComponent(formattedUrl)}`);
+      console.log('RAW SCAN RESPONSE:', JSON.stringify(response.data, null, 2));
+      
+      // Defensive response handling with fallbacks
+      const safeData = {
+        score: response.data?.score ?? 0,
+        tags: response.data?.tags ?? [],
+        recommendations: response.data?.recommendations ?? [],
+        socialTags: response.data?.socialTags ?? {},
+        technicalTags: response.data?.technicalTags ?? {},
+        url: response.data?.url ?? formattedUrl,
+        title: response.data?.title ?? null,
+        description: response.data?.description ?? null,
+        ...response.data
+      };
+      
+      setAnalysisData(safeData);
     } catch (error) {
-      console.error("Error analyzing URL:", error);
-      const errorMessage = error.response?.data?.message || error.message || "Failed to analyze URL. Please try again.";
+      console.error('Scan failed:', error.response?.data || error.message);
+      const errorMessage = error.response?.data?.error || error.response?.data?.message || error.message || 'Scan failed. Please try again.';
       setError(errorMessage);
       toast({
         title: "Analysis Failed",
