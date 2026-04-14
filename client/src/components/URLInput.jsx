@@ -39,6 +39,7 @@ const URLInput = ({ setAnalysisData, setIsLoading, setError }) => {
 
     try {
       const res = await api.get(`/api/scan?url=${encodeURIComponent(formattedUrl)}`);
+      console.log('RAW SCAN RESPONSE:', JSON.stringify(res.data, null, 2));
       setAnalysisData(res.data);
     } catch (error) {
       console.error("Error analyzing URL:", error);
