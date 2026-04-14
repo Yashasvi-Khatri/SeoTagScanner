@@ -3,6 +3,7 @@
   "buildCommand": "cd client && npm run build",
   "outputDirectory": "client/dist",
   "rewrites": [
+    { "source": "/api/test", "destination": "/api/test.ts" },
     { "source": "/api/health", "destination": "/api/health.ts" },
     { "source": "/api/auth/register", "destination": "/api/auth/register.ts" },
     { "source": "/api/auth/login", "destination": "/api/auth/login.ts" },
