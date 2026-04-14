@@ -1,6 +1,6 @@
 {
   "version": 2,
-  "buildCommand": "npm install && cd client && npm run build",
+  "buildCommand": "cd client && npm run build",
   "outputDirectory": "client/dist",
   "rewrites": [
     { "source": "/api/health", "destination": "/api/health.ts" },

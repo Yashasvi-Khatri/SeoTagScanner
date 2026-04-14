@@ -1,6 +1,6 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 import * as jwt from 'jsonwebtoken';
-import { getUserScans } from '../../server/models/scanModel.js';
+import { getUserScans } from '../../lib/scanModel.js';
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   console.log('=== SCAN HISTORY API REQUEST ===')

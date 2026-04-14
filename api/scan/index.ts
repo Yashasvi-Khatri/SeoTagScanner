@@ -1,6 +1,6 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 import * as jwt from 'jsonwebtoken';
-import { saveScan } from '../../server/models/scanModel.js';
+import { saveScan } from '../../lib/scanModel.js';
 import axios from 'axios';
 
 process.on('unhandledRejection', (reason) => {

@@ -1,20 +1,28 @@
-import { supabase } from "../db.js";
+import { supabase } from './database.js';
+
+export interface Scan {
+  id: string;
+  user_id: string;
+  url: string;
+  result: any;
+  scanned_at: string;
+}
 
 /**
  * Save a scan result for a user.
- * @param {string} userId - UUID of the user
- * @param {string} url - scanned URL
- * @param {Object} result - full analysis data object
- * @returns {Promise<Object>} inserted scan row
+ * @param userId - UUID of the user
+ * @param url - scanned URL
+ * @param result - full analysis data object
+ * @returns inserted scan row
  */
-export async function saveScan(userId, url, result) {
+export async function saveScan(userId: string, url: string, result: any): Promise<Scan> {
   console.log('DB: Attempting to save scan for user:', userId);
   console.log('DB: URL:', url);
   console.log('DB: Supabase client available:', !!supabase);
   
   try {
     const { data, error } = await supabase
-      .from("scans")
+      .from('scans')
       .insert({ user_id: userId, url, result })
       .select()
       .single();
@@ -36,19 +44,19 @@ export async function saveScan(userId, url, result) {
 
 /**
  * Fetch all scans for a user, newest first.
- * @param {string} userId - UUID of the user
- * @returns {Promise<Array>} list of scan rows
+ * @param userId - UUID of the user
+ * @returns list of scan rows
  */
-export async function getUserScans(userId) {
+export async function getUserScans(userId: string): Promise<Scan[]> {
   console.log('DB: Attempting to fetch scans for user:', userId);
   console.log('DB: Supabase client available:', !!supabase);
   
   try {
     const { data, error } = await supabase
-      .from("scans")
-      .select("id, url, result, scanned_at")
-      .eq("user_id", userId)
-      .order("scanned_at", { ascending: false });
+      .from('scans')
+      .select('id, url, result, scanned_at')
+      .eq('user_id', userId)
+      .order('scanned_at', { ascending: false });
 
     if (error) {
       console.error('DB: Get user scans error:', error);
@@ -57,7 +65,7 @@ export async function getUserScans(userId) {
       throw error;
     }
     
-    const result = data ?? [];
+    const result = (data ?? []) as Scan[];
     console.log('DB: User scans fetched successfully, count:', result.length);
     return result;
   } catch (err) {
@@ -68,14 +76,14 @@ export async function getUserScans(userId) {
 
 /**
  * Count how many scans a user has done today.
- * @param {string} userId
- * @returns {Promise<number>}
+ * @param userId - UUID of the user
+ * @returns number of scans today
  */
-export async function countTodayScans(userId) {
+export async function countTodayScans(userId: string): Promise<number> {
   console.log('DB: Counting today\'s scans for user:', userId);
   console.log('DB: Supabase client available:', !!supabase);
   
-  const today = new Date().toISOString().split("T")[0];
+  const today = new Date().toISOString().split('T')[0];
   const startOfDay = `${today}T00:00:00.000Z`;
   const endOfDay = `${today}T23:59:59.999Z`;
   
@@ -83,11 +91,11 @@ export async function countTodayScans(userId) {
 
   try {
     const { count, error } = await supabase
-      .from("scans")
-      .select("id", { count: "exact", head: true })
-      .eq("user_id", userId)
-      .gte("scanned_at", startOfDay)
-      .lte("scanned_at", endOfDay);
+      .from('scans')
+      .select('id', { count: 'exact', head: true })
+      .eq('user_id', userId)
+      .gte('scanned_at', startOfDay)
+      .lte('scanned_at', endOfDay);
 
     if (error) {
       console.error('DB: Count today scans error:', error);
