@@ -21,15 +21,6 @@ const AnalysisResults = ({ analysisData, isLoading, error }) => {
     technical: { status: 'error', statusText: 'Missing technical tags' }
   });
 
-  // Loading/empty state guard
-  if (!analysisData || !analysisData.allMetaTags) {
-    return (
-      <div className="p-4 text-gray-500">
-        No scan results Yet. Enter a URL to scan.
-      </div>
-    );
-  }
-  
   useEffect(() => {
     if (analysisData) {
       const { score, passed, warnings, errors } = analyzeSeoScore(analysisData);
@@ -43,6 +34,15 @@ const AnalysisResults = ({ analysisData, isLoading, error }) => {
       calculateCategoryScores(analysisData);
     }
   }, [analysisData]);
+
+  // Loading/empty state guard - moved after all hooks
+  if (!analysisData || !analysisData.allMetaTags) {
+    return (
+      <div className="p-4 text-gray-500">
+        No scan results Yet. Enter a URL to scan.
+      </div>
+    );
+  }
 
   const calculateCategoryScores = (data) => {
     // Calculate Essential Meta Tags score
