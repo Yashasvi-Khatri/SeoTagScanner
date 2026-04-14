@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useToast } from "@/hooks/use-toast";
-import { getToken } from "@/lib/auth";
+import api from "@/lib/api";
 
 const URLInput = ({ setAnalysisData, setIsLoading, setError }) => {
   const [url, setUrl] = useState("");
@@ -38,24 +38,15 @@ const URLInput = ({ setAnalysisData, setIsLoading, setError }) => {
     setAnalysisData(null);
 
     try {
-      const token = getToken();
-      const res = await fetch(`/api/scan?url=${encodeURIComponent(formattedUrl)}`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-
-      const data = await res.json();
-
-      if (!res.ok) {
-        throw new Error(data.message || "Failed to analyze URL");
-      }
-
-      setAnalysisData(data);
+      const res = await api.get(`/api/scan?url=${encodeURIComponent(formattedUrl)}`);
+      setAnalysisData(res.data);
     } catch (error) {
       console.error("Error analyzing URL:", error);
-      setError(error.message || "Failed to analyze URL. Please try again.");
+      const errorMessage = error.response?.data?.message || error.message || "Failed to analyze URL. Please try again.";
+      setError(errorMessage);
       toast({
         title: "Analysis Failed",
-        description: error.message || "Failed to analyze URL. Please try again.",
+        description: errorMessage,
         variant: "destructive",
       });
     } finally {

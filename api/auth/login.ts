@@ -1,12 +1,7 @@
-import { VercelRequest, VercelResponse } from '@vercel/node';
+import type { VercelRequest, VercelResponse } from '@vercel/node';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
-import { createClient } from '@supabase/supabase-js';
-
-const supabase = createClient(
-  process.env.SUPABASE_URL!,
-  process.env.SUPABASE_ANON_KEY!
-);
+import { findUserByEmail } from '../../server/models/userModel.js';
 
 function signToken(userId: string, email: string): string {
   const secret = process.env.JWT_SECRET;
@@ -26,26 +21,22 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       return res.status(400).json({ message: "Email and password are required" });
     }
 
-    const { data: user, error } = await supabase
-      .from("users")
-      .select("*")
-      .eq("email", email)
-      .single();
-
-    if (error || !user) {
+    const user = await findUserByEmail(email);
+    if (!user) {
       return res.status(401).json({ message: "Invalid email or password" });
     }
+    const userTyped = user as { id: string; email: string; password_hash: string };
 
-    const valid = await bcrypt.compare(password, user.password_hash);
+    const valid = await bcrypt.compare(password, userTyped.password_hash);
     if (!valid) {
       return res.status(401).json({ message: "Invalid email or password" });
     }
 
-    const token = signToken(user.id, user.email);
+    const token = signToken(userTyped.id, userTyped.email);
 
     return res.status(200).json({
       token,
-      user: { id: user.id, email: user.email },
+      user: { id: userTyped.id, email: userTyped.email },
     });
   } catch (err: any) {
     console.error("Login error:", err);

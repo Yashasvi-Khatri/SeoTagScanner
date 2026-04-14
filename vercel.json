@@ -1,0 +1,13 @@
+{
+  "version": 2,
+  "buildCommand": "cd client && npm install && npm run build",
+  "outputDirectory": "client/dist",
+  "rewrites": [
+    { "source": "/api/auth/register", "destination": "/api/auth/register" },
+    { "source": "/api/auth/login", "destination": "/api/auth/login" },
+    { "source": "/api/auth/me", "destination": "/api/auth/me" },
+    { "source": "/api/scan/history", "destination": "/api/scan/history" },
+    { "source": "/api/scan", "destination": "/api/scan/index" },
+    { "source": "/(.*)", "destination": "/index.html" }
+  ]
+}

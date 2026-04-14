@@ -42,4 +42,4 @@ vite.config.ts.*
 
 # Temporary files
 *.tmp
-*.temp
+*.temp.env

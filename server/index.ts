@@ -1,9 +1,15 @@
 import "dotenv/config";
 import express, { type Request, Response, NextFunction } from "express";
+import cors from "cors";
 import { registerRoutes } from "./routes";
 import { setupVite, serveStatic, log } from "./vite";
 
 const app = express();
+
+// CORS configuration
+const allowedOrigins = process.env.ALLOWED_ORIGINS?.split(',') || ['http://localhost:5173'];
+app.use(cors({ origin: allowedOrigins, credentials: true }));
+
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 
@@ -53,15 +59,14 @@ app.use((req, res, next) => {
   // doesn't interfere with the other routes
   if (app.get("env") === "development") {
     await setupVite(app, server);
-  } else {
+  } else if (process.env.NODE_ENV === 'production') {
     serveStatic(app);
   }
 
-  // ALWAYS serve the app on port 5000
+  // ALWAYS serve the app on port 5001
   // this serves both the API and the client.
-  // It is the only port that is not firewalled.
-  const port = Number(process.env.PORT) || 5000;
-  server.listen(port, "0.0.0.0", () => {
-    log(`serving on port ${port}`);
+  const PORT = parseInt(process.env.PORT || '5001');
+  server.listen(PORT, "0.0.0.0", () => {
+    log(`serving on port ${PORT}`);
   });
 })();

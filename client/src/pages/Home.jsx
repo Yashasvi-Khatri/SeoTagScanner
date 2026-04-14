@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import URLInput from "@/components/URLInput";
 import AnalysisResults from "@/components/AnalysisResults";
 import { useAuth } from "@/context/AuthContext";
-import { getToken } from "@/lib/auth";
+import api from "@/lib/api";
 
 export default function Home() {
   const [analysisData, setAnalysisData] = useState(null);
@@ -15,14 +15,8 @@ export default function Home() {
   const fetchHistory = async () => {
     setHistoryLoading(true);
     try {
-      const token = getToken();
-      const res = await fetch("/api/scan/history", {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      if (res.ok) {
-        const data = await res.json();
-        setScanHistory(data);
-      }
+      const res = await api.get("/api/scan/history");
+      setScanHistory(res.data.history || []);
     } catch (e) {
       console.error("Failed to fetch history", e);
     } finally {

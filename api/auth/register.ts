@@ -1,12 +1,7 @@
-import { VercelRequest, VercelResponse } from '@vercel/node';
+import type { VercelRequest, VercelResponse } from '@vercel/node';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
-import { createClient } from '@supabase/supabase-js';
-
-const supabase = createClient(
-  process.env.SUPABASE_URL!,
-  process.env.SUPABASE_ANON_KEY!
-);
+import { createUser, findUserByEmail } from '../../server/models/userModel.js';
 
 function signToken(userId: string, email: string): string {
   const secret = process.env.JWT_SECRET;
@@ -30,32 +25,20 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       return res.status(400).json({ message: "Password must be at least 6 characters" });
     }
 
-    // Check if user exists
-    const { data: existing, error: existingError } = await supabase
-      .from("users")
-      .select("*")
-      .eq("email", email)
-      .single();
-
-    if (existing && !existingError) {
+    const existing = await findUserByEmail(email);
+    if (existing) {
       return res.status(409).json({ message: "Email already in use" });
     }
 
     const passwordHash = await bcrypt.hash(password, 12);
-    
-    const { data: user, error } = await supabase
-      .from("users")
-      .insert({ email, password_hash: passwordHash })
-      .select()
-      .single();
+    const user = await createUser(email, passwordHash);
+    const userTyped = user as { id: string; email: string };
 
-    if (error) throw error;
-
-    const token = signToken(user.id, user.email);
+    const token = signToken(userTyped.id, userTyped.email);
 
     return res.status(201).json({
       token,
-      user: { id: user.id, email: user.email },
+      user: { id: userTyped.id, email: userTyped.email },
     });
   } catch (err: any) {
     console.error("Register error:", err);

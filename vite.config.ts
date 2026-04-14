@@ -26,8 +26,22 @@ export default defineConfig({
     },
   },
   root: path.resolve(import.meta.dirname, "client"),
+  server: process.env.NODE_ENV !== 'production' ? {
+    proxy: {
+      '/api': {
+        target: 'http://localhost:5001',
+        changeOrigin: true,
+        secure: false,
+        configure: (proxy: any) => {
+          proxy.on('error', (err: any) => {
+            console.log('proxy error', err)
+          })
+        }
+      },
+    },
+  } : undefined,
   build: {
-    outDir: path.resolve(import.meta.dirname, "dist/public"),
+    outDir: path.resolve(import.meta.dirname, "client/dist"),
     emptyOutDir: true,
   },
 });

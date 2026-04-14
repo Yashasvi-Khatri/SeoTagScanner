@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useLocation } from "wouter";
 import { useAuth } from "@/context/AuthContext";
 import { useToast } from "@/hooks/use-toast";
+import api from "@/lib/api";
 
 type Tab = "login" | "register";
 
@@ -19,17 +20,11 @@ export default function AuthPage() {
     e.preventDefault();
     setLoading(true);
     try {
-      const res = await fetch("/api/auth/login", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(loginForm),
-      });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.message || "Login failed");
-      login(data.token, data.user);
+      const res = await api.post("/api/auth/login", loginForm);
+      login(res.data.token, res.data.user);
       setLocation("/");
     } catch (err: any) {
-      toast({ title: "Login failed", description: err.message, variant: "destructive" });
+      toast({ title: "Login failed", description: err.response?.data?.message || err.message || "Login failed", variant: "destructive" });
     } finally {
       setLoading(false);
     }
@@ -39,17 +34,11 @@ export default function AuthPage() {
     e.preventDefault();
     setLoading(true);
     try {
-      const res = await fetch("/api/auth/register", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(registerForm),
-      });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.message || "Registration failed");
-      login(data.token, data.user);
+      const res = await api.post("/api/auth/register", registerForm);
+      login(res.data.token, res.data.user);
       setLocation("/");
     } catch (err: any) {
-      toast({ title: "Registration failed", description: err.message, variant: "destructive" });
+      toast({ title: "Registration failed", description: err.response?.data?.message || err.message || "Registration failed", variant: "destructive" });
     } finally {
       setLoading(false);
     }
