@@ -1,5 +1,5 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
-import jwt from 'jsonwebtoken';
+import { verify } from 'jsonwebtoken';
 import { findUserById } from '../../lib/userModel.js';
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
@@ -18,7 +18,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       return res.status(500).json({ message: "JWT_SECRET not configured" });
     }
 
-    const decoded = jwt.verify(token, secret) as { userId: string; email: string };
+    const decoded = verify(token, secret) as { userId: string; email: string };
     
     const user = await findUserById(decoded.userId);
     if (!user) {
