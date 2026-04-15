@@ -82,8 +82,8 @@ const EssentialMetaTags = ({ title, description, canonical, viewport }) => {
     {
       name: 'Title Tag',
       content: title ? `<title>${title}</title>` : null,
-      status: title ? (title.length > 10 && title.length < 60 ? 'Optimal' : 'Needs Improvement') : 'Missing',
-      recommendation: title 
+      status: title && title.length ? (title.length > 10 && title.length < 60 ? 'Optimal' : 'Needs Improvement') : 'Missing',
+      recommendation: title && title.length 
         ? (title.length > 10 && title.length < 60 
             ? `Title has optimal length (${title.length} characters).` 
             : `Title length (${title.length} characters) is ${title.length < 10 ? 'too short' : 'too long'}. Aim for 50-60 characters.`)
@@ -91,14 +91,14 @@ const EssentialMetaTags = ({ title, description, canonical, viewport }) => {
     },
     {
       name: 'Meta Description',
-      content: description ? `<meta name="description" content="${description.content}">` : null,
+      content: description ? `<meta name="description" content="${description}">` : null,
       status: description 
-        ? (description.content.length > 120 && description.content.length < 158 ? 'Optimal' : 'Needs Improvement') 
+        ? (description.length > 120 && description.length < 158 ? 'Optimal' : 'Needs Improvement') 
         : 'Missing',
       recommendation: description 
-        ? (description.content.length > 120 && description.content.length < 158 
-            ? `Description has optimal length (${description.content.length} characters).` 
-            : `Description length (${description.content.length} characters) is ${description.content.length < 120 ? 'too short' : 'too long'}. Aim for 120-158 characters.`)
+        ? (description.length > 120 && description.length < 158 
+            ? `Description has optimal length (${description.length} characters).` 
+            : `Description length (${description.length} characters) is ${description.length < 120 ? 'too short' : 'too long'}. Aim for 120-158 characters.`)
         : 'Missing meta description. Implementation: <meta name="description" content="Your page description here">'
     },
     {

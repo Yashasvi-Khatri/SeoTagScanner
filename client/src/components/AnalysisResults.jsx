@@ -196,7 +196,7 @@ const AnalysisResults = ({ analysisData, isLoading, error }) => {
         <div className="lg:col-span-2 space-y-6">
           <EssentialMetaTags 
             title={analysisData.title}
-            description={analysisData.metaTags?.description?.content}
+            description={analysisData.metaTags?.description}
             canonical={analysisData.metaTags?.canonical}
             viewport={analysisData.metaTags?.viewport}
           />
@@ -208,21 +208,21 @@ const AnalysisResults = ({ analysisData, isLoading, error }) => {
           
           <TechnicalSEOTags 
             robots={analysisData.metaTags?.robots}
-            hreflang={analysisData.linkTags?.hreflang || []}
+            hreflang={[]} // hreflang data not available in current API response
           />
         </div>
 
         <div className="space-y-6">
           <GooglePreview 
             title={analysisData.title}
-            description={analysisData.metaTags.description?.content}
+            description={analysisData.metaTags?.description}
             url={analysisData.url}
           />
           
           <SocialMediaPreviews 
             url={analysisData.url}
             title={analysisData.title}
-            description={analysisData.metaTags.description?.content}
+            description={analysisData.metaTags?.description}
             image={analysisData.socialTags?.openGraph?.find(tag => tag.property === 'og:image')?.content || ''}
           />
           

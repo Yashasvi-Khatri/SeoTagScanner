@@ -79,6 +79,9 @@ const TagItem = ({ status, name, content, recommendation }) => {
 };
 
 const TechnicalSEOTags = ({ robots, hreflang }) => {
+  // Defensive programming - ensure hreflang is an array
+  const safeHreflang = Array.isArray(hreflang) ? hreflang : [];
+  
   // Create technical SEO tag items
   const tagItems = [
     {
@@ -91,11 +94,11 @@ const TechnicalSEOTags = ({ robots, hreflang }) => {
     },
     {
       name: 'hreflang',
-      content: hreflang && hreflang.length > 0 
-        ? hreflang.map(tag => `<link rel="alternate" hreflang="${tag.hreflang}" href="${tag.href}">`).join('\n')
+      content: safeHreflang.length > 0 
+        ? safeHreflang.map(tag => `<link rel="alternate" hreflang="${tag.hreflang}" href="${tag.href}">`).join('\n')
         : null,
-      status: hreflang && hreflang.length > 0 ? 'Optimal' : 'Missing',
-      recommendation: hreflang && hreflang.length > 0
+      status: safeHreflang.length > 0 ? 'Optimal' : 'Missing',
+      recommendation: safeHreflang.length > 0
         ? `Hreflang tags are properly implemented.`
         : `Missing hreflang tags. These are important if your site has multilingual content. Implementation: <link rel="alternate" hreflang="en" href="https://example.com/">`
     }
