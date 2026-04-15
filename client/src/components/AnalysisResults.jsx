@@ -109,7 +109,7 @@ const AnalysisResults = ({ analysisData, isLoading, error }) => {
       technical: { 
         status: technicalStatus, 
         statusText: technicalStatusText,
-        count: (data.metaTags.robots ? 1 : 0) + (data.linkTags.hreflang ? data.linkTags.hreflang.length : 0)
+        count: (data.metaTags?.robots ? 1 : 0) + (data.linkTags?.hreflang ? data.linkTags.hreflang.length : 0)
       }
     });
   };
