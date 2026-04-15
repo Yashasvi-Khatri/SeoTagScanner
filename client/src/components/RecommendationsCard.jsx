@@ -31,7 +31,7 @@ const RecommendationsCard = ({ recommendations }) => {
         </h2>
         
         <div className="space-y-3">
-          {recommendations.length > 0 ? (
+          {recommendations && recommendations.length > 0 ? (
             recommendations.map((rec, index) => (
               <RecommendationItem 
                 key={index}

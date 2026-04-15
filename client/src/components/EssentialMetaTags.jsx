@@ -103,7 +103,7 @@ const EssentialMetaTags = ({ title, description, canonical, viewport }) => {
     },
     {
       name: 'Canonical URL',
-      content: canonical ? `<link rel="canonical" href="${canonical.href}">` : null,
+      content: canonical ? `<link rel="canonical" href="${canonical}">` : null,
       status: canonical ? 'Optimal' : 'Missing',
       recommendation: canonical 
         ? 'Canonical URL is properly implemented.' 

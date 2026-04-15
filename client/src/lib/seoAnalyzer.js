@@ -25,7 +25,8 @@ export function analyzeSeoScore(analysisData) {
   
   // Meta description
   if (analysisData.metaTags.description) {
-    const descLength = analysisData.metaTags.description.content.length;
+    const desc = analysisData.metaTags.description;
+    const descLength = (typeof desc === 'string' ? desc : desc?.content || '').length;
     if (descLength > 120 && descLength < 158) {
       score += 15;
       passed++;
@@ -124,7 +125,7 @@ export function analyzeSeoScore(analysisData) {
   }
   
   // Check for hreflang tags
-  if (analysisData.linkTags.hreflang && analysisData.linkTags.hreflang.length > 0) {
+  if (analysisData.linkTags?.hreflang && analysisData.linkTags?.hreflang.length > 0) {
     score += 10;
     passed++;
   } else {
@@ -180,7 +181,9 @@ export function getRecommendations(analysisData) {
       description: 'Missing meta description. Add a compelling description between 120-158 characters.'
     });
   } else {
-    const descLength = analysisData.metaTags.description.content.length;
+    const descLength = (typeof analysisData.metaTags.description === 'string' 
+    ? analysisData.metaTags.description 
+    : analysisData.metaTags.description?.content || '').length
     if (descLength < 120) {
       recommendations.push({
         type: 'warning',
@@ -256,7 +259,7 @@ export function getRecommendations(analysisData) {
   }
   
   // Hreflang recommendation
-  if (!analysisData.linkTags.hreflang || analysisData.linkTags.hreflang.length === 0) {
+  if (!analysisData.linkTags?.hreflang || analysisData.linkTags?.hreflang.length === 0) {
     recommendations.push({
       type: 'warning',
       title: 'Consider Adding Hreflang Tags',
