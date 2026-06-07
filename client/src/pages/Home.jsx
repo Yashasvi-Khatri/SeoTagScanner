@@ -25,6 +25,24 @@ export default function Home() {
     }
   };
 
+  const deleteScan = async (scanId) => {
+    try {
+      await api.delete("/api/scan/delete", { data: { scanId } });
+      setScanHistory(prev => prev.filter(item => item.id !== scanId));
+    } catch (e) {
+      console.error("Failed to delete scan", e);
+    }
+  };
+
+  const clearAllHistory = async () => {
+    try {
+      await api.delete("/api/scan/clear-all");
+      setScanHistory([]);
+    } catch (e) {
+      console.error("Failed to clear history", e);
+    }
+  };
+
   useEffect(() => {
     fetchHistory();
   }, [analysisData]);
@@ -95,10 +113,10 @@ export default function Home() {
                 Scan History
               </h2>
               <button
-                onClick={fetchHistory}
+                onClick={clearAllHistory}
                 className="text-sm text-indigo-600 hover:text-indigo-800 transition-colors"
               >
-                <i className="fa-solid fa-rotate-right mr-1"></i> Refresh
+                <i className="fa-solid fa-rotate-right mr-1"></i> Refresh (Clear All)
               </button>
             </div>
             <div className="divide-y divide-gray-50">
@@ -127,8 +145,17 @@ export default function Home() {
                         <p className="text-gray-500 text-xs mt-0.5 truncate">{item.title}</p>
                       )}
                     </div>
-                    <div className="ml-4 flex-shrink-0 text-xs text-gray-400">
-                      {new Date(item.created_at).toLocaleDateString()}
+                    <div className="ml-4 flex items-center space-x-3 flex-shrink-0">
+                      <div className="text-xs text-gray-400">
+                        {new Date(item.created_at).toLocaleDateString()}
+                      </div>
+                      <button
+                        onClick={() => deleteScan(item.id)}
+                        className="text-gray-400 hover:text-red-600 transition-colors"
+                        title="Delete this scan"
+                      >
+                        <i className="fa-solid fa-trash text-sm"></i>
+                      </button>
                     </div>
                   </div>
                 ))

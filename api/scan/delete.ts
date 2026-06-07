@@ -1,9 +1,9 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 import jwt from 'jsonwebtoken';
-import { getUserScans } from '../../lib/scanModel.js';
+import { deleteScan } from '../../lib/scanModel.js';
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
-  console.log('=== SCAN HISTORY API REQUEST ===')
+  console.log('=== DELETE SCAN API REQUEST ===')
   console.log('Method:', req.method)
   console.log('Headers:', req.headers)
   console.log('Environment check:')
@@ -11,7 +11,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   console.log('SUPABASE_ANON_KEY:', process.env.SUPABASE_ANON_KEY ? 'SET' : 'MISSING')
   console.log('JWT_SECRET:', process.env.JWT_SECRET ? 'SET' : 'MISSING')
   
-  if (req.method !== 'GET') {
+  if (req.method !== 'DELETE') {
     console.error('Method not allowed:', req.method)
     return res.status(405).json({ message: "Method not allowed" });
   }
@@ -37,23 +37,21 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     const decoded = jwt.verify(token, secret) as { userId: string; email: string };
     console.log('Token verified for user:', decoded.userId)
     
-    console.log('Step 3: Fetching scan history from database')
-    const history = await getUserScans(decoded.userId);
-    console.log('Scan history fetched, count:', history.length)
+    console.log('Step 3: Extracting scan ID')
+    const { scanId } = req.body;
+    if (!scanId) {
+      console.error('No scan ID provided')
+      return res.status(400).json({ message: "Scan ID is required" });
+    }
+    
+    console.log('Step 4: Deleting scan from database')
+    await deleteScan(scanId, decoded.userId);
+    console.log('Scan deleted successfully')
 
-    // Transform data to match frontend expectations
-    const transformedHistory = history.map((scan: any) => ({
-      id: scan.id,
-      url: scan.url,
-      title: scan.result?.title || null,
-      created_at: scan.scanned_at,
-      result: scan.result
-    }));
-
-    console.log('=== SCAN HISTORY API SUCCESS ===')
-    return res.status(200).json({ history: transformedHistory });
+    console.log('=== DELETE SCAN API SUCCESS ===')
+    return res.status(200).json({ message: "Scan deleted successfully" });
   } catch (err: any) {
-    console.error('=== SCAN HISTORY API ERROR ===')
+    console.error('=== DELETE SCAN API ERROR ===')
     console.error('Error type:', err.constructor.name)
     console.error('Error message:', err.message)
     console.error('Error stack:', err.stack)
@@ -81,6 +79,6 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     }
     
     console.error('Generic database or server error')
-    return res.status(500).json({ message: "Failed to fetch scan history" });
+    return res.status(500).json({ message: "Failed to delete scan" });
   }
 }

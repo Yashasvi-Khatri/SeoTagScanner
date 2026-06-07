@@ -5,7 +5,7 @@
  * @returns {string} - The truncated string
  */
 export function truncateString(str, length) {
-  if (!str) return '';
+  if (!str || typeof str !== 'string') return '';
   if (str.length <= length) return str;
   return str.substring(0, length - 3) + '...';
 }

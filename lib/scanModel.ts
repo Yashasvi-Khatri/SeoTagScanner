@@ -112,3 +112,63 @@ export async function countTodayScans(userId: string): Promise<number> {
     throw err;
   }
 }
+
+/**
+ * Delete a specific scan by ID.
+ * @param scanId - UUID of the scan to delete
+ * @param userId - UUID of the user (for verification)
+ * @returns success status
+ */
+export async function deleteScan(scanId: string, userId: string): Promise<void> {
+  console.log('DB: Attempting to delete scan:', scanId, 'for user:', userId);
+  console.log('DB: Supabase client available:', !!supabase);
+  
+  try {
+    const { error } = await supabase
+      .from('scans')
+      .delete()
+      .eq('id', scanId)
+      .eq('user_id', userId);
+
+    if (error) {
+      console.error('DB: Delete scan error:', error);
+      console.error('DB: Error code:', error.code);
+      console.error('DB: Error details:', error.details);
+      throw error;
+    }
+    
+    console.log('DB: Scan deleted successfully');
+  } catch (err) {
+    console.error('DB: Delete scan exception:', err);
+    throw err;
+  }
+}
+
+/**
+ * Delete all scans for a user.
+ * @param userId - UUID of the user
+ * @returns success status
+ */
+export async function clearAllScans(userId: string): Promise<void> {
+  console.log('DB: Attempting to clear all scans for user:', userId);
+  console.log('DB: Supabase client available:', !!supabase);
+  
+  try {
+    const { error } = await supabase
+      .from('scans')
+      .delete()
+      .eq('user_id', userId);
+
+    if (error) {
+      console.error('DB: Clear all scans error:', error);
+      console.error('DB: Error code:', error.code);
+      console.error('DB: Error details:', error.details);
+      throw error;
+    }
+    
+    console.log('DB: All scans cleared successfully');
+  } catch (err) {
+    console.error('DB: Clear all scans exception:', err);
+    throw err;
+  }
+}
